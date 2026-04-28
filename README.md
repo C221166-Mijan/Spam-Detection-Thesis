@@ -1,5 +1,5 @@
 # 📧 Email & SMS Spam Detection
-**Accuracy: 99.41%**
+**Accuracy: 98.23%**
 
 This thesis project uses **SVM (Support Vector Machine)** to classify spam messages.
 
