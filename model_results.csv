@@ -1,0 +1,7 @@
+Model,CV Accuracy,Test Accuracy,Precision,Recall,F1-Score
+Support Vector Machine (SVM),97.24,98.23,95.32,96.22,95.76
+XGBoost (XGB),96.08,96.7,92.38,91.73,92.05
+Multinomial Naive Bayes (MNB),95.85,96.06,88.2,93.62,90.83
+Logistic Regression (LR),94.5,96.02,96.72,83.69,89.73
+Decision Tree (DT),92.11,92.67,89.6,73.29,80.62
+Random Forest (RF),88.14,88.64,98.98,45.86,62.68
