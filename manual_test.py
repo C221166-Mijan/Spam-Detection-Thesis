@@ -6,21 +6,28 @@ vectorizer = joblib.load('tfidf_vectorizer_v2.joblib')
 
 def check_message():
     print("\n--- Spam Detection Testing ---")
-    user_input = input("Enter your message to check: ")
     
-    # ২. ইনপুট মেসেজটিকে মডেলে দেওয়ার উপযোগী করে তোলা (Transform)
+    # Message খালি না হওয়া পর্যন্ত জিজ্ঞাসা করা
+    user_input = input("Enter your message to check: ").strip()
+    
+    # যদি খালি হয় তাহলে exit করা
+    if not user_input:
+        return False
+    
+    # २. ইনপুট মেসেজটিকে মডেলে দেওয়ার উপযোগী করে তোলা (Transform)
     data = vectorizer.transform([user_input])
     
-    # ৩. প্রেডিকশন করা
+    # ३. প্রেডিকশন করা
     prediction = model.predict(data)
     
-    # ৪. রেজাল্ট দেখানো
+    # ४. রেজাল্ট দেখানো
     result = "🚨 SPAM" if prediction[0] == 1 else "✅ HAM (Legitimate)"
-    print(f"\nPrediction: {result}\n")
+    print(f"\nPrediction: {result}")
+    
+    return True  # চলতে থাকা
 
 if __name__ == "__main__":
     while True:
-        check_message()
-        choice = input("Do you want to check another? (y/n): ")
-        if choice.lower() != 'y':
+        if not check_message():
+            print("\nThank you! Exiting...\n")
             break
