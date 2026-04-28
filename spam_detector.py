@@ -1,89 +1,43 @@
-import pandas as pd
+import joblib
 import re
-from joblib import load
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+import string
 
-# --- 1. মডেল এবং ভেক্টরাইজার লোডিং ---
-
-# The best model (SVM) found from cross-validation is loaded.
+# Load v2 model & vectorizer (same preprocessing as training)
 try:
-    model = load('support_vector_machine_svm_best_model.joblib')
-    print("Loaded the best model: Support Vector Machine (SVM)")
-except FileNotFoundError:
-    print("Error: SVM model file not found. Ensure 'support_vector_machine_svm_best_model.joblib' is in the folder.")
+    model      = joblib.load('support_vector_machine_svm_best_model_v2.joblib')
+    vectorizer = joblib.load('tfidf_vectorizer_v2.joblib')
+    print("✅ Model and vectorizer loaded successfully.")
+except FileNotFoundError as e:
+    print(f"❌ Error: {e}")
+    print("   Make sure you have run train_multiple_models.py first.")
     exit()
 
-# Load the fitted TF-IDF Vectorizer
-try:
-    vectorizer = load('tfidf_vectorizer_final.joblib')
-    print("Loaded TF-IDF Vectorizer.")
-except FileNotFoundError:
-    print("Error: TF-IDF Vectorizer file not found.")
-    exit()
-
-# --- 2. টেক্সট প্রসেসিং ফাংশন ---
-
-# Initialize NLTK tools
-lemmatizer = WordNetLemmatizer()
-stop_words = set(stopwords.words('english'))
-
-def preprocess_text(text):
-    """Cleans and processes the input text for prediction."""
-    # Remove special characters and single characters
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    text = re.sub(r'\s+[a-zA-Z]\s+', ' ', text)
-    
-    # Remove single characters from the start
-    text = re.sub(r'\^[a-zA-Z]\s+', ' ', text) 
-    
-    # Substitute multiple spaces with single space
-    text = re.sub(r'\s+', ' ', text, flags=re.I)
-    
-    # Convert to lower case and remove stop words
-    text = text.lower()
-    text = text.split()
-    text = [lemmatizer.lemmatize(word) for word in text if word not in stop_words]
-    text = ' '.join(text)
-    
+def clean_text(text):
+    """Same cleaning used during training — no NLTK needed."""
+    text = str(text).lower()
+    text = re.sub(r'\S+@\S+', '', text)          # remove emails
+    text = re.sub(r'http\S+', '', text)           # remove URLs
+    text = re.sub(r'\d+', '', text)               # remove digits
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-# --- 3. প্রেডিকশন ফাংশন ---
-
-def predict_spam(message):
-    """Processes message and makes prediction using the loaded SVM model."""
-    processed_message = preprocess_text(message)
-    
-    # Transform the single message using the loaded vectorizer
-    message_vector = vectorizer.transform([processed_message])
-    
-    # Make prediction
-    prediction = model.predict(message_vector)
-    
-    if prediction[0] == 1:
-        return "SPAM"
-    else:
-        return "HAM (Not Spam)"
-
-# --- 4. মেইন লুপ (ইউজার ইন্টারফেস) ---
+def predict(message: str) -> str:
+    cleaned = clean_text(message)
+    vector  = vectorizer.transform([cleaned])
+    pred    = model.predict(vector)[0]
+    return "🚨 SPAM" if pred == 1 else "✅ HAM (Legitimate)"
 
 if __name__ == "__main__":
-    print("\n--- SPAM DETECTION SYSTEM (Using SVM Model) ---")
-    print("Enter 'exit' or 'quit' to stop the system.")
-    
-    while True:
-        user_input = input("\nEnter a message to check: ")
-        
-        if user_input.lower() in ['exit', 'quit']:
-            print("System stopped. Thank you!")
-            break
-            
-        if user_input.strip() == "":
-            continue
+    print("\n--- Spam Detection System (SVM v2) ---")
+    print("Type 'exit' to quit.\n")
 
-        result = predict_spam(user_input)
-        
-        print(f"\n--- Prediction Result ---")
-        print(f"Message: {user_input}")
-        print(f"Result: {result}")
-        print("-------------------------")
+    while True:
+        user_input = input("Enter message: ").strip()
+        if user_input.lower() in ['exit', 'quit']:
+            print("Exiting. Goodbye!")
+            break
+        if not user_input:
+            continue
+        result = predict(user_input)
+        print(f"→ {result}\n")
