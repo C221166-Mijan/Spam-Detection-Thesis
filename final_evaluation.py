@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (confusion_matrix, classification_report,
-                             accuracy_score, precision_score, recall_score, f1_score)
+                             accuracy_score, precision_score, recall_score,
+                             f1_score, roc_curve, auc)
 from joblib import load
 
 print("=" * 60)
@@ -87,3 +88,28 @@ plt.ylabel('Actual Label', fontsize=12)
 plt.tight_layout()
 plt.savefig('confusion_matrix_final.png', dpi=300)
 print("\n✅ Confusion matrix saved: confusion_matrix_final.png")
+
+# ROC-AUC curve
+print("\n[4/3] Calculating ROC-AUC curve...")
+if hasattr(model, 'decision_function'):
+    y_score = model.decision_function(X_test_vec)
+elif hasattr(model, 'predict_proba'):
+    y_score = model.predict_proba(X_test_vec)[:, 1]
+else:
+    raise AttributeError("Model has neither decision_function nor predict_proba required for ROC-AUC")
+
+fpr, tpr, _ = roc_curve(y_test, y_score)
+roc_auc = auc(fpr, tpr)
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.4f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=1, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate', fontsize=12)
+plt.ylabel('True Positive Rate', fontsize=12)
+plt.title('ROC Curve — SVM on Held-Out Test Set', fontsize=13)
+plt.legend(loc='lower right')
+plt.tight_layout()
+plt.savefig('roc_auc_curve.png', dpi=300)
+print("✅ ROC-AUC curve saved: roc_auc_curve.png")
